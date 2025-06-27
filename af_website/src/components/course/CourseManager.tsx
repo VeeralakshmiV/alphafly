@@ -3,9 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, BookOpen, DollarSign } from "lucide-react";
-import { useCourseStore } from "@/stores/courseStore";
 import { useToast } from "@/hooks/use-toast";
 import CourseEditor from "./CourseEditor";
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  sections: any[];
+  status: string;
+  enrollment_fee: number;
+}
 
 interface CourseManagerProps {
   role: "admin" | "staff" | "student";
@@ -14,20 +23,70 @@ interface CourseManagerProps {
 const CourseManager = ({ role }: CourseManagerProps) => {
   const [showEditor, setShowEditor] = useState(false);
   const [editingCourse, setEditingCourse] = useState<string | null>(null);
-  
-  const { 
-    courses, 
-    isLoading, 
-    error, 
-    fetchCourses, 
-    deleteCourse 
-  } = useCourseStore();
-  
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const fetchCourses = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/courses', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch courses');
+      const data = await res.json();
+      setCourses(data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch courses');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addCourse = async (courseData: Partial<Course>) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/courses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(courseData)
+    });
+    if (!res.ok) throw new Error('Failed to create course');
+    await fetchCourses();
+  };
+
+  const updateCourse = async (id: string, updates: Partial<Course>) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`/api/courses/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(updates)
+    });
+    if (!res.ok) throw new Error('Failed to update course');
+    await fetchCourses();
+  };
+
+  const deleteCourse = async (courseId: string) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`/api/courses/${courseId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Failed to delete course');
+    await fetchCourses();
+  };
 
   useEffect(() => {
     fetchCourses();
-  }, [fetchCourses]);
+  }, []);
 
   const handleCreateCourse = () => {
     setEditingCourse(null);
@@ -49,7 +108,7 @@ const CourseManager = ({ role }: CourseManagerProps) => {
         });
       } catch (error) {
         toast({
-          title: "Error", 
+          title: "Error",
           description: "Failed to delete course",
           variant: "destructive",
         });
@@ -68,6 +127,8 @@ const CourseManager = ({ role }: CourseManagerProps) => {
           setShowEditor(false);
           fetchCourses();
         }}
+        addCourse={addCourse}
+        updateCourse={updateCourse}
       />
     );
   }

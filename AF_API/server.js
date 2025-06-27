@@ -8,6 +8,7 @@ const paymentRoutes = require('./routes/payments');
 const enrollmentRoutes = require('./routes/enrollments');
 const lessonProgressRoutes = require('./routes/lesson_progress');
 const userRoutes = require('./routes/users');
+const contentRoutes = require('./routes/content');
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/lesson_progress', lessonProgressRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/content', contentRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

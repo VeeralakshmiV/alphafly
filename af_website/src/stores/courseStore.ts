@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { supabase } from '@/integrations/supabase/client';
 import { Course, DatabaseCourse, Lesson } from '@/types/courseTypes';
 
 interface CourseState {

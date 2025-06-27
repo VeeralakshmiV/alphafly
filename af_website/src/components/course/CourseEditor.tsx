@@ -33,10 +33,22 @@ const CourseEditor = ({ course, onClose, onSave }: CourseEditorProps) => {
   const { addCourse, updateCourse } = useCourseStore();
 
   const handleSave = () => {
+    const mappedSections = sections.map((section, idx) => ({
+      id: section.id,
+      title: section.title,
+      description: "", // or section.description if you add it to your Section type
+      order: idx,
+      lessons: section.lessons.map(lesson => ({
+        id: lesson.id,
+        title: lesson.title,
+        content: lesson.content,
+      })),
+    }));
+
     const courseData = {
       title,
       description,
-      sections,
+      sections: mappedSections,
     };
 
     if (course) {
